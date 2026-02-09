@@ -6,18 +6,29 @@ const STORAGE_STATUS_TONE = "statusTone";
 const STORAGE_RUNNING = "running";
 const STORAGE_START = "startTimeMs";
 const STORAGE_END = "endTimeMs";
+const STORAGE_OPEN_ALL = "openAllInProgress";
 
 // Speed + coverage tuning
-const PAGES_TO_SCAN = 5;            // scan first 5 pages per keyword
+const DEFAULT_PAGES_TO_SCAN = 6;   // default pages per keyword (slider min 2 max 20)
 const TAB_TIMEOUT_MS = 15000;       // wait for page load
 const POLL_MAX_ATTEMPTS = 5;        // collect attempts per page
 const POLL_INTERVAL_MS = 1500;      // interval between attempts
 const POLL_MIN_COUNT = 30;          // accept early if sellers >= this
 
 let currentRunId = 0;
+let openAllQueue = [];
+let openAllTimer = null;
+let openAllInProgress = false;
 
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function normalizePagesToScan(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return DEFAULT_PAGES_TO_SCAN;
+  const even = Math.round(n / 2) * 2;
+  return Math.min(20, Math.max(2, even));
 }
 
 function setStatus(text, tone) {
@@ -74,9 +85,10 @@ async function pollCollect(tabId, { maxAttempts, intervalMs, minCount }) {
   return best;
 }
 
-async function autoCollectInTabs(expected, origin, runId) {
+async function autoCollectInTabs(expected, origin, runId, pagesToScan) {
   const lists = await getLists();
   const queue = expected.slice();
+  const pageCount = normalizePagesToScan(pagesToScan);
 
   for (const keyword of queue) {
     if (runId !== currentRunId) break;
@@ -86,10 +98,10 @@ async function autoCollectInTabs(expected, origin, runId) {
     const tab = await chrome.tabs.create({ url, active: false });
     await waitForTabComplete(tab.id, TAB_TIMEOUT_MS);
 
-    for (let page = 0; page < PAGES_TO_SCAN; page++) {
+    for (let page = 0; page < pageCount; page++) {
       if (runId !== currentRunId) break;
 
-      await setStatus(`收集中：${keyword}，第 ${page + 1}/${PAGES_TO_SCAN} 頁`, "ok");
+      await setStatus(`收集中：${keyword}，第 ${page + 1}/${pageCount} 頁`, "ok");
       if (page > 0) {
         const pageUrl = `${origin}/search?keyword=${encodeURIComponent(keyword)}&page=${page}`;
         await chrome.tabs.update(tab.id, { url: pageUrl });
@@ -130,7 +142,7 @@ async function autoCollectInTabs(expected, origin, runId) {
   }
 }
 
-async function startCollect(expected, origin) {
+async function startCollect(expected, origin, pagesToScan) {
   currentRunId += 1;
   const runId = currentRunId;
 
@@ -144,7 +156,7 @@ async function startCollect(expected, origin) {
   await saveLists({});
   await setStatus("開始收集…", "ok");
 
-  await autoCollectInTabs(expected, origin, runId);
+  await autoCollectInTabs(expected, origin, runId, pagesToScan);
 
   if (runId === currentRunId) {
     await chrome.storage.local.set({
@@ -165,8 +177,8 @@ function stopCollect() {
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg?.type === "START_COLLECT") {
-    const { expected, origin } = msg;
-    startCollect(expected, origin)
+    const { expected, origin, pagesToScan } = msg;
+    startCollect(expected, origin, pagesToScan)
       .then(() => sendResponse({ ok: true }))
       .catch(e => sendResponse({ ok: false, error: String(e) }));
     return true;
@@ -177,5 +189,41 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       .catch(e => sendResponse({ ok: false, error: String(e) }));
     return true;
   }
+  if (msg?.type === "OPEN_ALL_TABS") {
+    const urls = Array.isArray(msg.urls) ? msg.urls : [];
+    enqueueOpenAll(urls)
+      .then(() => sendResponse({ ok: true }))
+      .catch(e => sendResponse({ ok: false, error: String(e) }));
+    return true;
+  }
   return false;
 });
+
+async function enqueueOpenAll(urls) {
+  if (!urls.length) return;
+  if (openAllInProgress) {
+    // avoid stacking multiple runs
+    openAllQueue = [];
+  }
+  const unique = Array.from(new Set(urls.filter(Boolean)));
+  openAllQueue.push(...unique);
+  openAllInProgress = true;
+  await chrome.storage.local.set({ [STORAGE_OPEN_ALL]: true });
+  if (!openAllTimer) {
+    openAllTimer = setInterval(async () => {
+      const next = openAllQueue.shift();
+      if (!next) {
+        clearInterval(openAllTimer);
+        openAllTimer = null;
+        openAllInProgress = false;
+        await chrome.storage.local.set({ [STORAGE_OPEN_ALL]: false });
+        return;
+      }
+      try {
+        await chrome.tabs.create({ url: next, active: false });
+      } catch {
+        // ignore
+      }
+    }, 1500);
+  }
+}

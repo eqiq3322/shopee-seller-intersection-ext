@@ -6,6 +6,8 @@ const statusEl = document.getElementById("status");
 const btnClear = document.getElementById("btnClear");
 const timerEl = document.getElementById("timer");
 const openAllEl = document.getElementById("openAll");
+const strengthInput = document.getElementById("searchStrength");
+const strengthValueEl = document.getElementById("searchStrengthValue");
 
 const STORAGE_LISTS = "lists";
 const STORAGE_EXPECTED = "expectedKeywords";
@@ -16,6 +18,12 @@ const STORAGE_STATUS_TONE = "statusTone";
 const STORAGE_RUNNING = "running";
 const STORAGE_START = "startTimeMs";
 const STORAGE_END = "endTimeMs";
+const STORAGE_SHOP_NAMES_TRIED = "shopNamesTried";
+const STORAGE_OPEN_ALL = "openAllInProgress";
+const STORAGE_SEARCH_STRENGTH = "searchStrength";
+const STORAGE_BLOCKED_SHOPS = "blockedShops";
+
+let nameHydrationInProgress = false;
 
 function setStatus(text, tone) {
   statusEl.textContent = text || "";
@@ -40,6 +48,22 @@ function parseKeywords(input) {
   return Array.from(new Set(parts));
 }
 
+function clampStrength(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return 6;
+  const even = Math.round(n / 2) * 2;
+  return Math.min(20, Math.max(2, even));
+}
+
+async function saveStrength(v) {
+  await chrome.storage.local.set({ [STORAGE_SEARCH_STRENGTH]: v });
+}
+
+function setStrengthUI(v) {
+  if (strengthInput) strengthInput.value = String(v);
+  if (strengthValueEl) strengthValueEl.textContent = String(v);
+}
+
 async function getActiveTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   return tab;
@@ -58,12 +82,18 @@ function intersectSets(arrays) {
   return Array.from(base);
 }
 
-function getIntersection(expected, lists) {
+function getIntersection(expected, lists, blockedSet) {
   if (expected.length < 2) return [];
   const arrays = expected.map(k => lists[k]?.sellers || []);
   const allCollected = arrays.every(a => a.length > 0);
   if (!allCollected) return [];
-  return intersectSets(arrays);
+  const inter = intersectSets(arrays);
+  if (!blockedSet || blockedSet.size === 0) return inter;
+  return inter.filter(s => {
+    if (!s.startsWith("SHOP_ID:")) return true;
+    const id = s.replace("SHOP_ID:", "");
+    return !blockedSet.has(id);
+  });
 }
 
 function toAbsoluteLink(origin, href) {
@@ -110,14 +140,14 @@ function renderProgress(expected, lists) {
   progressEl.innerHTML = rows.join("");
 }
 
-function renderResult(expected, lists, origin) {
+function renderResult(expected, lists, origin, blockedSet) {
   resultListEl.innerHTML = "";
   if (expected.length < 2) {
     resultCountEl.textContent = "交集數量：0 家";
     return;
   }
 
-  const inter = getIntersection(expected, lists);
+  const inter = getIntersection(expected, lists, blockedSet);
   if (!inter.length) {
     resultCountEl.textContent = "交集數量：0 家";
     return;
@@ -125,13 +155,19 @@ function renderResult(expected, lists, origin) {
   resultCountEl.textContent = `交集數量：${inter.length} 家`;
 
   const frag = document.createDocumentFragment();
+  const nameMap = (window.__shopNameMap || {});
   for (const seller of inter) {
     const li = document.createElement("li");
     const { text, href } = sellerToLink(origin, seller);
     if (href) {
       const a = document.createElement("a");
       a.href = href;
-      a.textContent = text;
+      if (seller.startsWith("SHOP_ID:")) {
+        const id = seller.replace("SHOP_ID:", "");
+        a.textContent = nameMap[id] || text;
+      } else {
+        a.textContent = text;
+      }
       if (seller.startsWith("SHOP_ID:")) {
         a.dataset.shopId = seller.replace("SHOP_ID:", "");
       }
@@ -144,13 +180,12 @@ function renderResult(expected, lists, origin) {
     frag.appendChild(li);
   }
   resultListEl.appendChild(frag);
-  hydrateShopNames(inter, origin);
 }
 
 async function collectFromPage() {
   const expected = parseKeywords(keywordsInput.value);
   if (!expected.length) {
-    setStatus("請輸入關鍵字（空白或逗號分隔）", "warn");
+    setStatus("請輸入關鍵字（空白鍵分隔）", "warn");
     return;
   }
 
@@ -175,30 +210,81 @@ async function collectFromPage() {
     return;
   }
 
+  const strength = clampStrength(strengthInput?.value);
+  setStrengthUI(strength);
+  await saveStrength(strength);
+
   await chrome.runtime.sendMessage({
     type: "START_COLLECT",
     expected,
-    origin
+    origin,
+    pagesToScan: strength
   });
   setStatus("已送出開始指令（可關閉視窗）", "ok");
 }
 
 document.getElementById("btnStart").addEventListener("click", collectFromPage);
 
+strengthInput?.addEventListener("input", () => {
+  const v = clampStrength(strengthInput.value);
+  setStrengthUI(v);
+});
+
+strengthInput?.addEventListener("change", () => {
+  const v = clampStrength(strengthInput.value);
+  setStrengthUI(v);
+  saveStrength(v).catch(() => null);
+});
+
+resultListEl.addEventListener("click", async (e) => {
+  const link = e.target?.closest?.("a[data-shop-id]");
+  if (!link) return;
+  e.preventDefault();
+
+  const shopId = link.dataset.shopId;
+  if (!shopId) return;
+
+  const data = await chrome.storage.local.get([STORAGE_EXPECTED, STORAGE_LAST_ORIGIN]);
+  const expected = data[STORAGE_EXPECTED] || [];
+  const origin = data[STORAGE_LAST_ORIGIN] || "";
+
+  if (!origin || !expected.length) {
+    // Fallback to normal behavior if no keywords/origin
+    window.open(link.href, "_blank", "noreferrer");
+    return;
+  }
+
+  for (const keyword of expected) {
+    const q = encodeURIComponent(keyword);
+    const url = `${origin}/shop/${shopId}/search?keyword=${q}`;
+    await chrome.tabs.create({ url, active: false });
+  }
+});
+
 openAllEl.addEventListener("click", async (e) => {
   e.preventDefault();
-  const data = await chrome.storage.local.get([STORAGE_LISTS, STORAGE_EXPECTED, STORAGE_LAST_ORIGIN]);
+  if (openAllEl.disabled) return;
+  openAllEl.disabled = true;
+  openAllEl.textContent = "已開啟";
+  const data = await chrome.storage.local.get([
+    STORAGE_LISTS,
+    STORAGE_EXPECTED,
+    STORAGE_LAST_ORIGIN,
+    STORAGE_BLOCKED_SHOPS
+  ]);
   const lists = data[STORAGE_LISTS] || {};
   const expected = data[STORAGE_EXPECTED] || [];
   const origin = data[STORAGE_LAST_ORIGIN] || "";
-  const inter = getIntersection(expected, lists);
-  if (!inter.length) return;
-  for (const seller of inter) {
-    const { href } = sellerToLink(origin, seller);
-    if (href) {
-      await chrome.tabs.create({ url: href, active: false });
-    }
+  const blocked = new Set(data[STORAGE_BLOCKED_SHOPS] || []);
+  const inter = getIntersection(expected, lists, blocked);
+  if (!inter.length) {
+    return;
   }
+  const urls = inter
+    .map(seller => sellerToLink(origin, seller).href)
+    .filter(Boolean);
+  if (!urls.length) return;
+  await chrome.runtime.sendMessage({ type: "OPEN_ALL_TABS", urls }).catch(() => null);
 });
 
 btnClear.addEventListener("click", async () => {
@@ -216,21 +302,27 @@ async function syncFromStorage() {
     STORAGE_LISTS,
     STORAGE_EXPECTED,
     STORAGE_LAST_ORIGIN,
+    STORAGE_SHOP_NAMES,
     STORAGE_STATUS,
     STORAGE_STATUS_TONE,
     STORAGE_RUNNING,
     STORAGE_START,
-    STORAGE_END
+    STORAGE_END,
+    STORAGE_OPEN_ALL,
+    STORAGE_BLOCKED_SHOPS,
+    STORAGE_SEARCH_STRENGTH
   ]);
   let lists = data[STORAGE_LISTS] || {};
   let expected = data[STORAGE_EXPECTED] || [];
   let origin = data[STORAGE_LAST_ORIGIN] || "";
+  const blocked = new Set(data[STORAGE_BLOCKED_SHOPS] || []);
+  const storedStrength = clampStrength(data[STORAGE_SEARCH_STRENGTH] || 6);
   const statusText = data[STORAGE_STATUS] || "";
+  window.__shopNameMap = data[STORAGE_SHOP_NAMES] || {};
   const statusTone = data[STORAGE_STATUS_TONE] || "muted";
   const running = !!data[STORAGE_RUNNING];
   const startMs = data[STORAGE_START] || 0;
   const endMs = data[STORAGE_END] || 0;
-
   if (expected.some(k => /\uFFFD/.test(k))) {
     await chrome.storage.local.clear();
     lists = {};
@@ -245,8 +337,16 @@ async function syncFromStorage() {
     keywordsInput.value = expected.join(" ");
   }
 
+  setStrengthUI(storedStrength);
+
   renderProgress(expected, lists);
-  renderResult(expected, lists, origin);
+  renderResult(expected, lists, origin, blocked);
+  const inter = getIntersection(expected, lists, blocked);
+  if (!running && inter.length) {
+    hydrateBlockedShops(inter, origin);
+    hydrateShopNames(inter, origin);
+  }
+
 
   if (running && startMs) {
     const elapsedSec = (Date.now() - startMs) / 1000;
@@ -267,52 +367,107 @@ setInterval(syncFromStorage, 1500);
 syncFromStorage();
 
 async function getShopNamesCache() {
-  const data = await chrome.storage.local.get([STORAGE_SHOP_NAMES]);
-  return data[STORAGE_SHOP_NAMES] || {};
+  const data = await chrome.storage.local.get([STORAGE_SHOP_NAMES, STORAGE_SHOP_NAMES_TRIED]);
+  return {
+    names: data[STORAGE_SHOP_NAMES] || {},
+    tried: new Set(data[STORAGE_SHOP_NAMES_TRIED] || [])
+  };
 }
 
-async function saveShopNamesCache(cache) {
-  await chrome.storage.local.set({ [STORAGE_SHOP_NAMES]: cache });
+async function saveShopNamesCache(names, tried) {
+  await chrome.storage.local.set({
+    [STORAGE_SHOP_NAMES]: names,
+    [STORAGE_SHOP_NAMES_TRIED]: Array.from(tried)
+  });
 }
 
-async function resolveShopName(origin, shopId) {
+async function fetchShopNameFromApi(origin, shopId) {
   try {
-    const url = `${origin}/shop/${shopId}`;
+    const url = `${origin}/api/v4/shop/get_shop_detail?shopid=${encodeURIComponent(shopId)}`;
     const resp = await fetch(url, { credentials: "include" });
     if (!resp.ok) return "";
-    const html = await resp.text();
-    // Prefer og:title if present, fallback to <title>
-    let title = "";
-    const og = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i);
-    if (og) title = og[1].trim();
-    if (!title) {
-      const m = html.match(/<title>([^<]+)<\/title>/i);
-      if (m) title = m[1].trim();
-    }
-    if (!title) return "";
-    title = title.replace(/\s*\|\s*蝦皮購物.*$/i, "").trim();
-    title = title.replace(/\s*-\s*Shopee.*$/i, "").trim();
-    return title;
+    const data = await resp.json();
+    const name = data?.data?.name || data?.data?.shop_name || "";
+    return String(name || "").trim();
   } catch {
     return "";
   }
 }
 
+async function getBlockedShopsCache() {
+  const data = await chrome.storage.local.get([STORAGE_BLOCKED_SHOPS]);
+  return new Set(data[STORAGE_BLOCKED_SHOPS] || []);
+}
+
+async function saveBlockedShopsCache(blockedSet) {
+  await chrome.storage.local.set({
+    [STORAGE_BLOCKED_SHOPS]: Array.from(blockedSet)
+  });
+}
+
+function isBlockedShopHtml(html) {
+  if (!html) return false;
+  return /此賣場已被蝦皮封鎖或凍結/i.test(html);
+}
+
+async function checkShopBlocked(origin, shopId) {
+  try {
+    const url = `${origin}/shop/${shopId}`;
+    const resp = await fetch(url, { credentials: "include" });
+    if (!resp.ok) return false;
+    const html = await resp.text();
+    return isBlockedShopHtml(html);
+  } catch {
+    return false;
+  }
+}
+
+// NOTE: name resolution uses API only (no DOM parsing)
+
 async function hydrateShopNames(inter, origin) {
+  if (!origin || nameHydrationInProgress) return;
+  nameHydrationInProgress = true;
+  try {
+    const { names, tried } = await getShopNamesCache();
+    const ids = inter
+      .filter(s => s.startsWith("SHOP_ID:"))
+      .map(s => s.replace("SHOP_ID:", ""));
+
+    const pending = ids.filter(id => !names[id] && !tried.has(id));
+    if (!pending.length) return;
+
+    for (const id of pending) {
+      tried.add(id);
+      const name = await fetchShopNameFromApi(origin, id);
+      if (name) {
+        names[id] = name;
+        const link = resultListEl.querySelector(`a[data-shop-id="${id}"]`);
+        if (link) link.textContent = name;
+      }
+      await new Promise(r => setTimeout(r, 150));
+    }
+
+    await saveShopNamesCache(names, tried);
+  } finally {
+    nameHydrationInProgress = false;
+  }
+}
+
+async function hydrateBlockedShops(inter, origin) {
   if (!origin) return;
-  const cache = await getShopNamesCache();
+  const blocked = await getBlockedShopsCache();
   const ids = inter
     .filter(s => s.startsWith("SHOP_ID:"))
     .map(s => s.replace("SHOP_ID:", ""));
 
-  const pending = ids.filter(id => !cache[id]);
+  const pending = ids.filter(id => !blocked.has(id));
+  if (!pending.length) return;
+
   for (const id of pending) {
-    const name = await resolveShopName(origin, id);
-    if (name) {
-      cache[id] = name;
-      const link = resultListEl.querySelector(`a[data-shop-id="${id}"]`);
-      if (link) link.textContent = name;
-    }
+    const isBlocked = await checkShopBlocked(origin, id);
+    if (isBlocked) blocked.add(id);
+    await new Promise(r => setTimeout(r, 150));
   }
-  if (pending.length) await saveShopNamesCache(cache);
+
+  await saveBlockedShopsCache(blocked);
 }

@@ -83,6 +83,34 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       sendResponse({ ok: false, error: String(e) });
     }
   }
+  if (msg?.type === "GET_SHOP_NAME") {
+    try {
+      const candidates = [];
+      const og = document.querySelector('meta[property="og:title"]')?.getAttribute("content");
+      if (og) candidates.push(og);
+      if (document.title) candidates.push(document.title);
+
+      const selectors = [
+        "h1",
+        "[data-sqe='shop-name']",
+        "[class*='shop-name']",
+        "[class*='shopName']",
+        "[class*='shop-title']",
+        "[class*='shopTitle']"
+      ];
+      for (const sel of selectors) {
+        const el = document.querySelector(sel);
+        if (el?.textContent) candidates.push(el.textContent.trim());
+      }
+
+      let name = candidates.find(Boolean) || "";
+      name = name.replace(/\s*\|\s*蝦皮購物.*$/i, "").trim();
+      name = name.replace(/\s*-\s*Shopee.*$/i, "").trim();
+      sendResponse({ ok: true, name });
+    } catch (e) {
+      sendResponse({ ok: false, error: String(e) });
+    }
+  }
   if (msg?.type === "SCROLL_AND_COLLECT") {
     const { maxScrolls, delayMs } = msg || {};
     scrollAndCollect({ maxScrolls, delayMs })

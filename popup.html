@@ -5,8 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>蝦皮賣場交集 (MVP)</title>
   <style>
-    body { font-family: system-ui, -apple-system, "Segoe UI", Arial; width: 380px; margin: 12px; }
-    button { width: 100%; padding: 10px; margin: 8px 0; cursor: pointer; }
+    html, body { width: 380px; height: 600px; }
+    html { overflow: hidden; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Arial; margin: 0; padding: 12px; box-sizing: border-box; overflow: auto; }
+    button { width: 100%; padding: 14px; margin: 8px 0; cursor: pointer; }
     input { width: 100%; padding: 8px; box-sizing: border-box; }
     .muted { color: #666; font-size: 12px; line-height: 1.4; }
     .section { margin: 12px 0; }
@@ -15,21 +17,34 @@
     .ok { color: #1b7f3a; }
     .warn { color: #b36b00; }
     .result { background: #f6f6f6; padding: 10px; border-radius: 8px; }
-    .result-list { max-height: 220px; overflow: auto; padding-left: 16px; margin: 8px 0 0; }
+    .result-list { max-height: 180px; overflow: auto; padding-left: 16px; margin: 8px 0 0; }
     .result-list li { margin: 4px 0; }
     a { color: #0b57d0; text-decoration: none; }
     a:hover { text-decoration: underline; }
+    .range-row { display: flex; align-items: center; gap: 8px; }
+    .range-row input[type="range"] { flex: 1; accent-color: #ee4d2d; }
+    .range-value { min-width: 28px; text-align: right; font-weight: 600; }
+    .range-row input[type="range"]::-webkit-slider-thumb { width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 2px solid #ee4d2d; }
+    .range-row input[type="range"]::-moz-range-thumb { width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 2px solid #ee4d2d; }
   </style>
 </head>
 <body>
   <h3>蝦皮賣場交集 (MVP)</h3>
 
   <div class="section">
-    <label class="muted">輸入多個關鍵字（用空白或逗號分隔）</label>
+    <label class="muted">輸入多個關鍵字（用空白鍵分隔）</label>
     <input id="keywordsInput" placeholder="充電器 濾網 印章" />
+    <div class="section">
+      <label class="muted">搜尋強度</label>
+      <div class="range-row">
+        <input id="searchStrength" type="range" min="2" max="20" step="2" value="6" />
+        <div id="searchStrengthValue" class="range-value">6</div>
+      </div>
+      <div class="muted">強度越強，搜尋頁數越多、等待時間越久。</div>
+    </div>
     <button id="btnStart">開始收集</button>
-    <button id="btnClear">清除暫存</button>
-    <div class="muted">收集中可關閉視窗，背景會繼續執行，完成後會自動顯示交集</div>
+    <button id="btnClear">清空上次結果</button>
+    <div class="muted">收集中可離開此視窗，背景會開啟一個分頁繼續執行，完成後該分頁自動關閉，在此顯示交集賣場</div>
     <div id="status" class="muted"></div>
   </div>
 
