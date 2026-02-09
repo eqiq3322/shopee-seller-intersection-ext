@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>蝦皮賣場交集 (MVP)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Arial; width: 380px; margin: 12px; }
+    button { width: 100%; padding: 10px; margin: 8px 0; cursor: pointer; }
+    input { width: 100%; padding: 8px; box-sizing: border-box; }
+    .muted { color: #666; font-size: 12px; line-height: 1.4; }
+    .section { margin: 12px 0; }
+    .progress { background: #f6f6f6; padding: 10px; border-radius: 8px; }
+    .progress-item { display: flex; justify-content: space-between; padding: 4px 0; }
+    .ok { color: #1b7f3a; }
+    .warn { color: #b36b00; }
+    .result { background: #f6f6f6; padding: 10px; border-radius: 8px; }
+    .result-list { max-height: 220px; overflow: auto; padding-left: 16px; margin: 8px 0 0; }
+    .result-list li { margin: 4px 0; }
+    a { color: #0b57d0; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h3>蝦皮賣場交集 (MVP)</h3>
+
+  <div class="section">
+    <label class="muted">輸入多個關鍵字（用空白或逗號分隔）</label>
+    <input id="keywordsInput" placeholder="充電器 濾網 印章" />
+    <button id="btnStart">開始收集</button>
+    <button id="btnClear">清除暫存</button>
+    <div class="muted">收集中可關閉視窗，背景會繼續執行，完成後會自動顯示交集</div>
+    <div id="status" class="muted"></div>
+  </div>
+
+  <div class="section">
+    <h4>顯示進度</h4>
+    <div id="progress" class="progress">(尚未開始)</div>
+  </div>
+
+  <div class="section">
+    <h4>結果</h4>
+    <div class="result">
+      <div id="resultCount">交集數量：0 家</div>
+      <a id="openAll" class="muted" href="#">開啟全部</a>
+      <ol id="resultList" class="result-list"></ol>
+    </div>
+    <div id="timer" class="muted">計時：0 秒</div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

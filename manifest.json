@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Shopee Seller Intersection (MVP)",
+  "version": "0.1.0",
+  "description": "Collect sellers from Shopee search pages and compute intersection across queries (local-only).",
+  "action": {
+    "default_title": "Seller Intersection",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["storage", "activeTab", "scripting", "tabs"],
+  "host_permissions": ["*://*.shopee.tw/*", "*://*.shopee.sg/*", "*://*.shopee.co.th/*", "*://*.shopee.com.my/*", "*://*.shopee.ph/*", "*://*.shopee.vn/*", "*://*.shopee.co.id/*", "*://*.shopee.com.br/*"],
+  "content_scripts": [
+    {
+      "matches": ["*://*.shopee.tw/*", "*://*.shopee.sg/*", "*://*.shopee.co.th/*", "*://*.shopee.com.my/*", "*://*.shopee.ph/*", "*://*.shopee.vn/*", "*://*.shopee.co.id/*", "*://*.shopee.com.br/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
