@@ -3,11 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>蝦皮賣場交集 (MVP)</title>
+  <title>蝦皮同店購物助手 Shopee Same-Store Finder</title>
   <style>
     html, body { width: 380px; height: 600px; }
     html { overflow: hidden; }
-    body { font-family: system-ui, -apple-system, "Segoe UI", Arial; margin: 0; padding: 12px; box-sizing: border-box; overflow: auto; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Arial;
+      margin: 0;
+      padding: 12px;
+      box-sizing: border-box;
+      overflow: auto;
+    }
     button { width: 100%; padding: 14px; margin: 8px 0; cursor: pointer; }
     input { width: 100%; padding: 8px; box-sizing: border-box; }
     .muted { color: #666; font-size: 12px; line-height: 1.4; }
@@ -24,12 +30,18 @@
     .range-row { display: flex; align-items: center; gap: 8px; }
     .range-row input[type="range"] { flex: 1; accent-color: #ee4d2d; }
     .range-value { min-width: 28px; text-align: right; font-weight: 600; }
-    .range-row input[type="range"]::-webkit-slider-thumb { width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 2px solid #ee4d2d; }
-    .range-row input[type="range"]::-moz-range-thumb { width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 2px solid #ee4d2d; }
+    .range-row input[type="range"]::-webkit-slider-thumb {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #fff; border: 2px solid #ee4d2d;
+    }
+    .range-row input[type="range"]::-moz-range-thumb {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #fff; border: 2px solid #ee4d2d;
+    }
   </style>
 </head>
 <body>
-  <h3>蝦皮賣場交集 (MVP)</h3>
+  <h3>蝦皮同店購物助手 Shopee Same-Store Finder</h3>
 
   <div class="section">
     <label class="muted">輸入多個關鍵字（用空白鍵分隔）</label>
@@ -41,15 +53,16 @@
         <div id="searchStrengthValue" class="range-value">6</div>
       </div>
       <div class="muted">強度越強，搜尋頁數越多、等待時間越久。</div>
+      <div class="muted">強度過高可能觸發蝦皮驗證（Captcha/403），請斟酌使用。</div>
     </div>
-    <button id="btnStart">開始收集</button>
+    <button id="btnStart">開始整理</button>
     <button id="btnClear">清空上次結果</button>
-    <div class="muted">收集中可離開此視窗，背景會開啟一個分頁繼續執行，完成後該分頁自動關閉，在此顯示交集賣場</div>
+    <div class="muted">整理中可離開此視窗，背景會在目前分頁繼續執行，完成後在此顯示交集賣場</div>
     <div id="status" class="muted"></div>
   </div>
 
   <div class="section">
-    <h4>顯示進度</h4>
+    <h4>整理進度</h4>
     <div id="progress" class="progress">(尚未開始)</div>
   </div>
 

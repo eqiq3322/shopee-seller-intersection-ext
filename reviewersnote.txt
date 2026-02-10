@@ -1,0 +1,1 @@
+This extension helps users find items from the same seller on Shopee to save on shipping costs. It uses 'tabs' permission to automate product searches within Shopee domains. All data is processed locally on the user's browser, and no personal data is collected.

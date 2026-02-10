@@ -85,44 +85,47 @@ async function pollCollect(tabId, { maxAttempts, intervalMs, minCount }) {
   return best;
 }
 
-async function autoCollectInTabs(expected, origin, runId, pagesToScan) {
+async function autoCollectInTabs(expected, origin, runId, pagesToScan, tabId) {
   const lists = await getLists();
   const queue = expected.slice();
   const pageCount = normalizePagesToScan(pagesToScan);
 
   for (const keyword of queue) {
     if (runId !== currentRunId) break;
+    if (!tabId) break;
 
     const sellersSet = new Set();
     const url = `${origin}/search?keyword=${encodeURIComponent(keyword)}&page=0`;
-    const tab = await chrome.tabs.create({ url, active: false });
-    await waitForTabComplete(tab.id, TAB_TIMEOUT_MS);
+    try {
+      await chrome.tabs.update(tabId, { url });
+    } catch {
+      await setStatus(`整理中止：分頁已關閉`, "warn");
+      break;
+    }
+    await waitForTabComplete(tabId, TAB_TIMEOUT_MS);
 
     for (let page = 0; page < pageCount; page++) {
       if (runId !== currentRunId) break;
 
-      await setStatus(`收集中：${keyword}，第 ${page + 1}/${pageCount} 頁`, "ok");
+      await setStatus(`整理中：${keyword}，第 ${page + 1}/${pageCount} 頁`, "ok");
       if (page > 0) {
         const pageUrl = `${origin}/search?keyword=${encodeURIComponent(keyword)}&page=${page}`;
-        await chrome.tabs.update(tab.id, { url: pageUrl });
-        await waitForTabComplete(tab.id, TAB_TIMEOUT_MS);
+        try {
+          await chrome.tabs.update(tabId, { url: pageUrl });
+        } catch {
+          await setStatus(`整理中止：分頁已關閉`, "warn");
+          break;
+        }
+        await waitForTabComplete(tabId, TAB_TIMEOUT_MS);
       }
 
-      const sellers = await pollCollect(tab.id, {
+      const sellers = await pollCollect(tabId, {
         maxAttempts: POLL_MAX_ATTEMPTS,
         intervalMs: POLL_INTERVAL_MS,
         minCount: POLL_MIN_COUNT
       });
       for (const s of sellers) sellersSet.add(s);
       await delay(250);
-    }
-
-    if (tab?.id) {
-      try {
-        await chrome.tabs.remove(tab.id);
-      } catch {
-        // ignore
-      }
     }
 
     if (runId !== currentRunId) break;
@@ -137,12 +140,12 @@ async function autoCollectInTabs(expected, origin, runId, pagesToScan) {
       await saveLists(lists);
       await setStatus(`已完成：${keyword}`, "ok");
     } else {
-      await setStatus(`收集失敗：${keyword}，未取得賣場`, "warn");
+      await setStatus(`整理失敗：${keyword}，未取得賣場`, "warn");
     }
   }
 }
 
-async function startCollect(expected, origin, pagesToScan) {
+async function startCollect(expected, origin, pagesToScan, tabId) {
   currentRunId += 1;
   const runId = currentRunId;
 
@@ -154,16 +157,16 @@ async function startCollect(expected, origin, pagesToScan) {
     [STORAGE_END]: 0
   });
   await saveLists({});
-  await setStatus("開始收集…", "ok");
+  await setStatus("開始整理…", "ok");
 
-  await autoCollectInTabs(expected, origin, runId, pagesToScan);
+  await autoCollectInTabs(expected, origin, runId, pagesToScan, tabId);
 
   if (runId === currentRunId) {
     await chrome.storage.local.set({
       [STORAGE_RUNNING]: false,
       [STORAGE_END]: Date.now()
     });
-    await setStatus("收集完成", "ok");
+    await setStatus("整理完成", "ok");
   }
 }
 
@@ -177,8 +180,8 @@ function stopCollect() {
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg?.type === "START_COLLECT") {
-    const { expected, origin, pagesToScan } = msg;
-    startCollect(expected, origin, pagesToScan)
+    const { expected, origin, pagesToScan, tabId } = msg;
+    startCollect(expected, origin, pagesToScan, tabId)
       .then(() => sendResponse({ ok: true }))
       .catch(e => sendResponse({ ok: false, error: String(e) }));
     return true;

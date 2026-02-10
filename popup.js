@@ -133,9 +133,9 @@ function renderProgress(expected, lists) {
   const rows = expected.map(k => {
     const count = (lists[k]?.sellers || []).length;
     if (count > 0) {
-      return `<div class="progress-item ok">${k}：已收集 ${count} 家</div>`;
+      return `<div class="progress-item ok">${k}：已整理 ${count} 家</div>`;
     }
-    return `<div class="progress-item warn">${k}：尚未收集</div>`;
+    return `<div class="progress-item warn">${k}：尚未整理</div>`;
   });
   progressEl.innerHTML = rows.join("");
 }
@@ -218,9 +218,10 @@ async function collectFromPage() {
     type: "START_COLLECT",
     expected,
     origin,
+    tabId: tab.id,
     pagesToScan: strength
   });
-  setStatus("已送出開始指令（可關閉視窗）", "ok");
+  setStatus("已開始整理（可離開此視窗）", "ok");
 }
 
 document.getElementById("btnStart").addEventListener("click", collectFromPage);
@@ -258,6 +259,7 @@ resultListEl.addEventListener("click", async (e) => {
     const q = encodeURIComponent(keyword);
     const url = `${origin}/shop/${shopId}/search?keyword=${q}`;
     await chrome.tabs.create({ url, active: false });
+    await new Promise(r => setTimeout(r, 1500));
   }
 });
 
@@ -293,7 +295,7 @@ btnClear.addEventListener("click", async () => {
   keywordsInput.value = "";
   renderProgress([], {});
   renderResult([], {}, "");
-  setStatus("已清除暫存", "ok");
+  setStatus("已清空上次結果", "ok");
   setTimerText("計時：0 秒");
 });
 
@@ -328,7 +330,7 @@ async function syncFromStorage() {
     lists = {};
     expected = [];
     origin = "";
-    setStatus("偵測到亂碼，已清除暫存，請重新收集", "warn");
+    setStatus("偵測到亂碼，已清空上次結果，請重新整理", "warn");
   } else if (statusText) {
     setStatus(statusText, statusTone);
   }
