@@ -104,7 +104,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       }
 
       let name = candidates.find(Boolean) || "";
-      name = name.replace(/\s*\|\s*蝦皮購物.*$/i, "").trim();
+      name = name.replace(/\s*\|\s*Shopee.*$/i, "").trim();
       name = name.replace(/\s*-\s*Shopee.*$/i, "").trim();
       sendResponse({ ok: true, name });
     } catch (e) {

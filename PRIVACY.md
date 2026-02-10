@@ -7,10 +7,10 @@ This privacy policy governs the use of the "Shopee Same-Store Finder" Chrome ext
 ## 1. Why we need permissions
 
 ### "tabs" and "host" permissions
-We require access to your tabs and specific Shopee domains (e.g., shopee.tw, shopee.sg, etc.) to perform the core functionalities of the extension:
+We require access to your tabs and specific Shopee domains (e.g., shopee.tw, shopee.sg, shopee.my, shopee.ph, shopee.th, shopee.vn, shopee.co.id, shopee.com.br) to perform the core functionalities of the extension:
 * **Detection:** To identify if the currently active tab is a supported Shopee regional site.
-* **Navigation & Search:** To automatically navigate pages within the Shopee site to search for products and organize results based on seller information.
-* **Opening Results:** To open new tabs showing specific store pages or search results when you interact with the extension's popup interface.
+* **Navigation & Search:** To navigate pages within Shopee to search for products and organize results based on seller information.
+* **Opening Results:** To open new tabs showing specific store pages or search results only when you interact with the extension's popup interface.
 
 ## 2. What data is handled
 

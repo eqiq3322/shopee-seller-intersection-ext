@@ -1,10 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "蝦皮同店購物助手 Shopee Same-Store Finder",
+  "default_locale": "en",
+  "name": "__MSG_appName__",
   "version": "0.1.0",
-  "description": "一次輸入多個商品，找出同時販售這些商品的蝦皮賣場，在同一家店湊免運。",
+  "description": "__MSG_appDesc__",
   "action": {
-    "default_title": "Seller Intersection",
+    "default_title": "__MSG_appName__",
     "default_popup": "popup.html"
   },
   "icons": {

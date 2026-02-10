@@ -31,6 +31,14 @@ function normalizePagesToScan(v) {
   return Math.min(20, Math.max(2, even));
 }
 
+function t(key, substitutions) {
+  try {
+    return chrome.i18n.getMessage(key, substitutions) || key;
+  } catch {
+    return key;
+  }
+}
+
 function setStatus(text, tone) {
   return chrome.storage.local.set({
     [STORAGE_STATUS]: text || "",
@@ -99,7 +107,7 @@ async function autoCollectInTabs(expected, origin, runId, pagesToScan, tabId) {
     try {
       await chrome.tabs.update(tabId, { url });
     } catch {
-      await setStatus(`整理中止：分頁已關閉`, "warn");
+      await setStatus(t("statusAnalysisStopped"), "warn");
       break;
     }
     await waitForTabComplete(tabId, TAB_TIMEOUT_MS);
@@ -107,13 +115,13 @@ async function autoCollectInTabs(expected, origin, runId, pagesToScan, tabId) {
     for (let page = 0; page < pageCount; page++) {
       if (runId !== currentRunId) break;
 
-      await setStatus(`整理中：${keyword}，第 ${page + 1}/${pageCount} 頁`, "ok");
+      await setStatus(t("statusAnalyzing", [keyword, String(page + 1), String(pageCount)]), "ok");
       if (page > 0) {
         const pageUrl = `${origin}/search?keyword=${encodeURIComponent(keyword)}&page=${page}`;
         try {
           await chrome.tabs.update(tabId, { url: pageUrl });
         } catch {
-          await setStatus(`整理中止：分頁已關閉`, "warn");
+          await setStatus(t("statusAnalysisStopped"), "warn");
           break;
         }
         await waitForTabComplete(tabId, TAB_TIMEOUT_MS);
@@ -138,9 +146,9 @@ async function autoCollectInTabs(expected, origin, runId, pagesToScan, tabId) {
         sellers
       };
       await saveLists(lists);
-      await setStatus(`已完成：${keyword}`, "ok");
+      await setStatus(t("statusDone", [keyword]), "ok");
     } else {
-      await setStatus(`整理失敗：${keyword}，未取得賣場`, "warn");
+      await setStatus(t("statusFailed", [keyword]), "warn");
     }
   }
 }
@@ -157,7 +165,7 @@ async function startCollect(expected, origin, pagesToScan, tabId) {
     [STORAGE_END]: 0
   });
   await saveLists({});
-  await setStatus("開始整理…", "ok");
+  await setStatus(t("statusStarting"), "ok");
 
   await autoCollectInTabs(expected, origin, runId, pagesToScan, tabId);
 
@@ -166,7 +174,7 @@ async function startCollect(expected, origin, pagesToScan, tabId) {
       [STORAGE_RUNNING]: false,
       [STORAGE_END]: Date.now()
     });
-    await setStatus("整理完成", "ok");
+    await setStatus(t("statusComplete"), "ok");
   }
 }
 

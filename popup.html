@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>蝦皮同店購物助手 Shopee Same-Store Finder</title>
+  <title data-i18n="appName">Shopee Same-Store Finder</title>
   <style>
     html, body { width: 380px; height: 600px; }
     html { overflow: hidden; }
@@ -41,39 +41,39 @@
   </style>
 </head>
 <body>
-  <h3>蝦皮同店購物助手 Shopee Same-Store Finder</h3>
+  <h3 data-i18n="appName">Shopee Same-Store Finder</h3>
 
   <div class="section">
-    <label class="muted">輸入多個關鍵字（用空白鍵分隔）</label>
-    <input id="keywordsInput" placeholder="濾網 保鮮袋" />
+    <label class="muted" data-i18n="labelKeywords">Enter keywords (Space separated)</label>
+    <input id="keywordsInput" data-i18n-placeholder="keywordsPlaceholder" placeholder="mask filter" />
     <div class="section">
-      <label class="muted">搜尋強度</label>
+      <label class="muted" data-i18n="labelStrength">Search Intensity</label>
       <div class="range-row">
         <input id="searchStrength" type="range" min="2" max="20" step="2" value="6" />
         <div id="searchStrengthValue" class="range-value">6</div>
       </div>
-      <div class="muted">強度越強，搜尋頁數越多、等待時間越久。</div>
-      <div class="muted">強度過高可能觸發蝦皮驗證（Captcha/403），請斟酌使用。</div>
+      <div class="muted" data-i18n="strengthNote">Higher intensity means more pages and longer time.</div>
+      <div class="muted" data-i18n="strengthWarn">High intensity may trigger Shopee verification (Captcha/403).</div>
     </div>
-    <button id="btnStart">開始整理</button>
-    <button id="btnClear">清空上次結果</button>
-    <div class="muted">整理中可離開此視窗，背景會在目前分頁繼續執行，完成後在此顯示交集賣場</div>
+    <button id="btnStart" data-i18n="btnStart">Start Analysis</button>
+    <button id="btnClear" data-i18n="btnClear">Clear History</button>
+    <div class="muted" data-i18n="runningNote">You can close this popup while running. Results will appear here.</div>
     <div id="status" class="muted"></div>
   </div>
 
   <div class="section">
-    <h4>整理進度</h4>
-    <div id="progress" class="progress">(尚未開始)</div>
+    <h4 data-i18n="sectionProgress">Progress</h4>
+    <div id="progress" class="progress" data-i18n="progressIdle">(Wait for start)</div>
   </div>
 
   <div class="section">
-    <h4>結果</h4>
+    <h4 data-i18n="sectionResults">Results</h4>
     <div class="result">
-      <div id="resultCount">交集數量：0 家</div>
-      <a id="openAll" class="muted" href="#">開啟全部</a>
+      <div id="resultCount" data-i18n="resultCountZero">Matches: 0</div>
+      <a id="openAll" class="muted" href="#" data-i18n="openAll">Open All</a>
       <ol id="resultList" class="result-list"></ol>
     </div>
-    <div id="timer" class="muted">計時：0 秒</div>
+    <div id="timer" class="muted" data-i18n="timerZero">Time: 0s</div>
   </div>
 
   <script src="popup.js"></script>

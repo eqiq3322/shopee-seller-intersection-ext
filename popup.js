@@ -25,6 +25,34 @@ const STORAGE_BLOCKED_SHOPS = "blockedShops";
 
 let nameHydrationInProgress = false;
 
+function t(key, substitutions) {
+  try {
+    return chrome.i18n.getMessage(key, substitutions) || key;
+  } catch {
+    return key;
+  }
+}
+
+function applyI18n() {
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    if (!key) return;
+    el.textContent = t(key);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+    const key = el.getAttribute("data-i18n-placeholder");
+    if (!key) return;
+    el.setAttribute("placeholder", t(key));
+  });
+  document.querySelectorAll("title[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    if (!key) return;
+    el.textContent = t(key);
+  });
+}
+
+applyI18n();
+
 function setStatus(text, tone) {
   statusEl.textContent = text || "";
   statusEl.className = "muted";
@@ -33,7 +61,7 @@ function setStatus(text, tone) {
 }
 
 function setTimerText(text) {
-  if (timerEl) timerEl.textContent = text || "計時：0 秒";
+  if (timerEl) timerEl.textContent = text || t("timerZero");
 }
 
 function normalizeKeyword(k) {
@@ -41,8 +69,10 @@ function normalizeKeyword(k) {
 }
 
 function parseKeywords(input) {
-  const parts = (input || "")
-    .split(/[\s,，、]+/)
+  const raw = (input || "");
+  const hasComma = /,/.test(raw);
+  const parts = raw
+    .split(hasComma ? /,+/ : /\s+/)
     .map(normalizeKeyword)
     .filter(Boolean);
   return Array.from(new Set(parts));
@@ -126,16 +156,16 @@ function sellerToLink(origin, seller) {
 
 function renderProgress(expected, lists) {
   if (!expected.length) {
-    progressEl.textContent = "(尚未開始)";
+    progressEl.textContent = t("progressIdle");
     return;
   }
 
   const rows = expected.map(k => {
     const count = (lists[k]?.sellers || []).length;
     if (count > 0) {
-      return `<div class="progress-item ok">${k}：已整理 ${count} 家</div>`;
+      return `<div class="progress-item ok">${t("progressItem", [k, String(count)])}</div>`;
     }
-    return `<div class="progress-item warn">${k}：尚未整理</div>`;
+    return `<div class="progress-item warn">${t("progressItemEmpty", [k])}</div>`;
   });
   progressEl.innerHTML = rows.join("");
 }
@@ -143,16 +173,16 @@ function renderProgress(expected, lists) {
 function renderResult(expected, lists, origin, blockedSet) {
   resultListEl.innerHTML = "";
   if (expected.length < 2) {
-    resultCountEl.textContent = "交集數量：0 家";
+    resultCountEl.textContent = t("resultCountZero");
     return;
   }
 
   const inter = getIntersection(expected, lists, blockedSet);
   if (!inter.length) {
-    resultCountEl.textContent = "交集數量：0 家";
+    resultCountEl.textContent = t("resultCountZero");
     return;
   }
-  resultCountEl.textContent = `交集數量：${inter.length} 家`;
+  resultCountEl.textContent = t("resultCount", [String(inter.length)]);
 
   const frag = document.createDocumentFragment();
   const nameMap = (window.__shopNameMap || {});
@@ -185,15 +215,15 @@ function renderResult(expected, lists, origin, blockedSet) {
 async function collectFromPage() {
   const expected = parseKeywords(keywordsInput.value);
   if (!expected.length) {
-    setStatus("請輸入關鍵字（空白鍵分隔）", "warn");
+    setStatus(t("statusNeedKeywords"), "warn");
     return;
   }
 
-  setTimerText("計時：進行中…");
+  setTimerText(t("timerRunning"));
 
   const tab = await getActiveTab();
   if (!tab?.id) {
-    setStatus("無法取得目前分頁", "warn");
+    setStatus(t("statusNoTab"), "warn");
     return;
   }
 
@@ -206,7 +236,7 @@ async function collectFromPage() {
   })();
 
   if (!origin || !origin.includes("shopee")) {
-    setStatus("請在蝦皮網站分頁執行", "warn");
+    setStatus(t("statusNotShopee"), "warn");
     return;
   }
 
@@ -221,7 +251,7 @@ async function collectFromPage() {
     tabId: tab.id,
     pagesToScan: strength
   });
-  setStatus("已開始整理（可離開此視窗）", "ok");
+  setStatus(t("statusStarted"), "ok");
 }
 
 document.getElementById("btnStart").addEventListener("click", collectFromPage);
@@ -295,8 +325,8 @@ btnClear.addEventListener("click", async () => {
   keywordsInput.value = "";
   renderProgress([], {});
   renderResult([], {}, "");
-  setStatus("已清空上次結果", "ok");
-  setTimerText("計時：0 秒");
+  setStatus(t("statusCleared"), "ok");
+  setTimerText(t("timerZero"));
 });
 
 async function syncFromStorage() {
@@ -330,7 +360,7 @@ async function syncFromStorage() {
     lists = {};
     expected = [];
     origin = "";
-    setStatus("偵測到亂碼，已清空上次結果，請重新整理", "warn");
+    setStatus(t("statusEncodingIssue"), "warn");
   } else if (statusText) {
     setStatus(statusText, statusTone);
   }
@@ -352,12 +382,12 @@ async function syncFromStorage() {
 
   if (running && startMs) {
     const elapsedSec = (Date.now() - startMs) / 1000;
-    setTimerText(`計時：${elapsedSec.toFixed(1)} 秒`);
+    setTimerText(t("timerElapsed", [elapsedSec.toFixed(1)]));
   } else if (startMs && endMs) {
     const elapsedSec = (endMs - startMs) / 1000;
-    setTimerText(`計時：${elapsedSec.toFixed(1)} 秒`);
+    setTimerText(t("timerElapsed", [elapsedSec.toFixed(1)]));
   } else {
-    setTimerText("計時：0 秒");
+    setTimerText(t("timerZero"));
   }
 }
 
@@ -409,7 +439,7 @@ async function saveBlockedShopsCache(blockedSet) {
 
 function isBlockedShopHtml(html) {
   if (!html) return false;
-  return /此賣場已被蝦皮封鎖或凍結/i.test(html);
+  return /This shop has been suspended or frozen/i.test(html);
 }
 
 async function checkShopBlocked(origin, shopId) {

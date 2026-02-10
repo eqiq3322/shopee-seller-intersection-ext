@@ -1,1 +1,7 @@
-This extension helps users find items from the same seller on Shopee to save on shipping costs. It uses 'tabs' permission to automate product searches within Shopee domains. All data is processed locally on the user's browser, and no personal data is collected.
+Review Notes:
+- Runs only on Shopee domains (tw, sg, my, ph, th, vn, id, br) as listed in host_permissions.
+- tabs: used to detect the active Shopee tab, navigate Shopee search pages, and open result tabs only after user action.
+- activeTab: used to start analysis from the tab the user is currently viewing.
+- scripting: used to read Shopee page content (search results DOM) to organize same-store results.
+- storage: used to save user settings and temporary results locally.
+- All processing is local; no data is sent to any server.
