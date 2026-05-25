@@ -1,35 +1,186 @@
 {
-  "appName": { "message": "蝦皮同店購物助手" },
-  "appDesc": { "message": "一次輸入多個關鍵字，自動找出同時販售這些商品的蝦皮賣場，幫你湊免運。" },
-  "labelKeywords": { "message": "輸入關鍵字（空白鍵分隔）" },
-  "keywordsPlaceholder": { "message": "濾網 保鮮袋" },
-  "labelStrength": { "message": "搜尋強度" },
-  "strengthNote": { "message": "強度越強，搜尋頁數越多、等待時間越久。" },
-  "strengthWarn": { "message": "強度過高可能觸發蝦皮驗證（Captcha/403）。" },
-  "btnStart": { "message": "開始整理" },
-  "btnClear": { "message": "清空結果" },
-  "runningNote": { "message": "整理中可離開此視窗，完成後在此顯示交集賣場。" },
-  "sectionProgress": { "message": "整理進度" },
-  "progressIdle": { "message": "（尚未開始）" },
-  "sectionResults": { "message": "結果" },
-  "resultCountZero": { "message": "交集數量：0 家" },
-  "resultCount": { "message": "交集數量：$1 家", "placeholders": { "1": { "content": "$1" } } },
-  "openAll": { "message": "開啟全部" },
-  "timerZero": { "message": "計時：0 秒" },
-  "timerRunning": { "message": "計時：進行中…" },
-  "timerElapsed": { "message": "計時：$1 秒", "placeholders": { "1": { "content": "$1" } } },
-  "statusNeedKeywords": { "message": "請輸入關鍵字（空白鍵分隔）" },
-  "statusNoTab": { "message": "無法取得目前分頁" },
-  "statusNotShopee": { "message": "請在蝦皮網站分頁執行" },
-  "statusStarted": { "message": "已開始整理（可離開此視窗）" },
-  "statusCleared": { "message": "已清空上次結果" },
-  "statusEncodingIssue": { "message": "偵測到亂碼，已清空上次結果，請重新整理" },
-  "progressItem": { "message": "$1：已整理 $2 家", "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } } },
-  "progressItemEmpty": { "message": "$1：尚未整理", "placeholders": { "1": { "content": "$1" } } },
-  "statusAnalysisStopped": { "message": "整理中止：分頁已關閉" },
-  "statusAnalyzing": { "message": "整理中：$1，第 $2/$3 頁", "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" }, "3": { "content": "$3" } } },
-  "statusDone": { "message": "已完成：$1", "placeholders": { "1": { "content": "$1" } } },
-  "statusFailed": { "message": "整理失敗：$1，未取得賣場", "placeholders": { "1": { "content": "$1" } } },
-  "statusStarting": { "message": "開始整理…" },
-  "statusComplete": { "message": "整理完成" }
+  "appName": {
+    "message": "蝦皮同賣場找店家"
+  },
+  "appDesc": {
+    "message": "找出同時販售多個商品的賣場，幫你節省運費。"
+  },
+  "labelKeywords": {
+    "message": "輸入關鍵字（以空白或逗號分隔）"
+  },
+  "keywordsPlaceholder": {
+    "message": "口罩 濾芯"
+  },
+  "labelStrength": {
+    "message": "搜尋強度"
+  },
+  "strengthNote": {
+    "message": "強度越高會掃描更多頁面，也會花更多時間。"
+  },
+  "strengthWarn": {
+    "message": "高強度搜尋可能觸發蝦皮驗證。"
+  },
+  "btnStart": {
+    "message": "開始分析"
+  },
+  "btnClear": {
+    "message": "清除紀錄"
+  },
+  "runningNote": {
+    "message": "分析進行時可以關閉此視窗，結果完成後會顯示在這裡。"
+  },
+  "sectionProgress": {
+    "message": "進度"
+  },
+  "progressIdle": {
+    "message": "（等待開始）"
+  },
+  "sectionResults": {
+    "message": "結果"
+  },
+  "resultCountZero": {
+    "message": "符合賣場：0"
+  },
+  "resultCount": {
+    "message": "符合賣場：$1",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "openAll": {
+    "message": "全部開啟"
+  },
+  "timerZero": {
+    "message": "時間：0 秒"
+  },
+  "timerRunning": {
+    "message": "時間：執行中..."
+  },
+  "timerElapsed": {
+    "message": "時間：$1 秒",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "statusNeedKeywords": {
+    "message": "請輸入關鍵字（以空白或逗號分隔）"
+  },
+  "statusNoTab": {
+    "message": "無法取得目前分頁"
+  },
+  "statusNotShopee": {
+    "message": "請在蝦皮頁面上使用此擴充功能"
+  },
+  "statusStarted": {
+    "message": "分析已開始（你可以關閉此視窗）"
+  },
+  "statusCleared": {
+    "message": "已清除先前結果"
+  },
+  "statusEncodingIssue": {
+    "message": "偵測到編碼問題，已清除結果，請重新嘗試。"
+  },
+  "progressItem": {
+    "message": "$1：$2 個賣場",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      },
+      "2": {
+        "content": "$2"
+      }
+    }
+  },
+  "progressItemEmpty": {
+    "message": "$1：尚未完成",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "statusAnalysisStopped": {
+    "message": "分析已停止：分頁已關閉"
+  },
+  "statusAnalyzing": {
+    "message": "分析中：$1（$2/$3）",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      },
+      "2": {
+        "content": "$2"
+      },
+      "3": {
+        "content": "$3"
+      }
+    }
+  },
+  "statusDone": {
+    "message": "完成：$1",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "statusFailed": {
+    "message": "失敗：$1（沒有找到賣場）",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "statusStarting": {
+    "message": "正在開始分析..."
+  },
+  "statusComplete": {
+    "message": "分析完成"
+  },
+  "progressPercentLabel": {
+    "message": "整體進度"
+  },
+  "feedbackPlaceholder": {
+    "message": "意見回饋"
+  },
+  "feedbackSend": {
+    "message": "送出"
+  },
+  "feedbackSending": {
+    "message": "送出中"
+  },
+  "feedbackEmpty": {
+    "message": "請先輸入回饋內容"
+  },
+  "feedbackSent": {
+    "message": "回饋已送出，謝謝你！"
+  },
+  "feedbackMailto": {
+    "message": "已開啟電子郵件草稿"
+  },
+  "feedbackFailed": {
+    "message": "無法送出回饋"
+  },
+  "vizIntersection": {
+    "message": "$1",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "vizWaiting": {
+    "message": "等待中"
+  },
+  "btnStopTitle": {
+    "message": "停止搜尋"
+  },
+  "statusStoppedByUser": {
+    "message": "搜尋已停止"
+  }
 }

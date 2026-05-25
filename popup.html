@@ -5,38 +5,242 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title data-i18n="appName">Shopee Same-Store Finder</title>
   <style>
-    html, body { width: 380px; height: 600px; }
+    :root {
+      --ink: #3f312b;
+      --muted: #7a6a61;
+      --paper: #fff9f0;
+      --card: #fffdf8;
+      --orange: #ee4d2d;
+      --orange-soft: #ffd9ca;
+      --mint: #b7ead8;
+      --yellow: #ffe9a7;
+      --line: rgba(63, 49, 43, 0.28);
+    }
+    html, body { width: 380px; min-height: 600px; }
     html { overflow: hidden; }
     body {
-      font-family: system-ui, -apple-system, "Segoe UI", Arial;
+      font-family: system-ui, -apple-system, "Segoe UI", Arial, "Noto Sans TC", sans-serif;
       margin: 0;
-      padding: 12px;
+      padding: 14px;
       box-sizing: border-box;
       overflow: auto;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(255, 233, 167, .55), transparent 26%),
+        radial-gradient(circle at 92% 8%, rgba(183, 234, 216, .55), transparent 22%),
+        var(--paper);
     }
-    button { width: 100%; padding: 14px; margin: 8px 0; cursor: pointer; }
-    input { width: 100%; padding: 8px; box-sizing: border-box; }
-    .muted { color: #666; font-size: 12px; line-height: 1.4; }
-    .section { margin: 12px 0; }
-    .progress { background: #f6f6f6; padding: 10px; border-radius: 8px; }
+    h3 {
+      margin: 2px 0 14px;
+      font-size: 18px;
+      letter-spacing: .2px;
+    }
+    h4 { margin: 0 0 8px; font-size: 14px; }
+    button {
+      width: 100%;
+      padding: 13px 14px;
+      margin: 8px 0;
+      cursor: pointer;
+      color: #fff;
+      font-weight: 700;
+      border: 2px solid var(--ink);
+      background: var(--orange);
+      border-radius: 20px 16px 22px 15px;
+      box-shadow: 4px 4px 0 rgba(63, 49, 43, .22);
+    }
+    button:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 rgba(63, 49, 43, .24); }
+    button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 rgba(63, 49, 43, .2); }
+    input {
+      width: 100%;
+      padding: 10px 11px;
+      box-sizing: border-box;
+      color: var(--ink);
+      background: #fff;
+      border: 2px solid var(--line);
+      border-radius: 16px 13px 18px 14px;
+      outline: none;
+    }
+    input:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 4px rgba(238, 77, 45, .12);
+    }
+    .keyword-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 4px;
+    }
+    .keyword-row input { flex: 1; min-width: 0; }
+    .keyword-row button {
+      flex: 0 0 auto;
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      margin: 0;
+      font-size: 21px;
+      line-height: 1;
+      border-width: 2px;
+      border-radius: 15px 12px 16px 11px;
+      box-shadow: 2px 2px 0 rgba(63, 49, 43, .18);
+      background: #fff;
+      color: #e53922;
+    }
+    .keyword-row button:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0 rgba(63, 49, 43, .2);
+      background: #fff7f2;
+    }
+    .muted { color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .section {
+      margin: 12px 0;
+      padding: 11px;
+      background: rgba(255, 253, 248, .74);
+      border: 2px solid rgba(63, 49, 43, .12);
+      border-radius: 24px 18px 25px 17px;
+    }
+    .progress, .result {
+      background: var(--card);
+      padding: 10px;
+      border: 2px dashed rgba(63, 49, 43, .22);
+      border-radius: 22px 17px 23px 18px;
+    }
     .progress-item { display: flex; justify-content: space-between; padding: 4px 0; }
     .ok { color: #1b7f3a; }
     .warn { color: #b36b00; }
-    .result { background: #f6f6f6; padding: 10px; border-radius: 8px; }
-    .result-list { max-height: 180px; overflow: auto; padding-left: 16px; margin: 8px 0 0; }
+    .result-list { max-height: 150px; overflow: auto; padding-left: 18px; margin: 8px 0 0; }
     .result-list li { margin: 4px 0; }
     a { color: #0b57d0; text-decoration: none; }
     a:hover { text-decoration: underline; }
     .range-row { display: flex; align-items: center; gap: 8px; }
-    .range-row input[type="range"] { flex: 1; accent-color: #ee4d2d; }
-    .range-value { min-width: 28px; text-align: right; font-weight: 600; }
+    .range-row input[type="range"] { flex: 1; accent-color: var(--orange); padding: 0; border: 0; background: transparent; }
+    .range-value { min-width: 28px; text-align: right; font-weight: 700; }
     .range-row input[type="range"]::-webkit-slider-thumb {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: #fff; border: 2px solid #ee4d2d;
+      width: 34px; height: 34px; border-radius: 50%;
+      background: #fff; border: 2px solid var(--orange);
     }
     .range-row input[type="range"]::-moz-range-thumb {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: #fff; border: 2px solid #ee4d2d;
+      width: 34px; height: 34px; border-radius: 50%;
+      background: #fff; border: 2px solid var(--orange);
+    }
+    .percent-box {
+      margin-top: 9px;
+      padding: 8px;
+      background: rgba(255, 255, 255, .72);
+      border: 1px solid rgba(63, 49, 43, .13);
+      border-radius: 16px 13px 17px 12px;
+    }
+    .percent-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .percent-num { font-weight: 800; color: var(--ink); }
+    .percent-track {
+      height: 10px;
+      overflow: hidden;
+      background: #f1e5d8;
+      border: 1px solid rgba(63, 49, 43, .16);
+      border-radius: 999px;
+    }
+    .percent-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--orange-soft), var(--orange));
+      transition: width .35s ease;
+    }
+    .intersection-viz {
+      position: relative;
+      height: 170px;
+      margin-top: 10px;
+      overflow: hidden;
+      border-radius: 24px 18px 25px 17px;
+      background: rgba(255, 255, 255, .56);
+      border: 1px solid rgba(63, 49, 43, .08);
+    }
+    .intersection-viz.hidden { display: none; }
+    .intersection-viz svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .venn-circle {
+      stroke: rgba(40, 28, 22, .72);
+      stroke-width: 2;
+      transition: cx .72s cubic-bezier(.2,.9,.2,1), cy .72s cubic-bezier(.2,.9,.2,1), r .72s cubic-bezier(.2,.9,.2,1);
+    }
+    .venn-label, .venn-count {
+      font-family: system-ui, -apple-system, "Segoe UI", Arial, "Noto Sans TC", sans-serif;
+      fill: var(--ink);
+      text-anchor: middle;
+      dominant-baseline: middle;
+      paint-order: stroke;
+      stroke: rgba(255,255,255,.96);
+      stroke-width: 3px;
+      stroke-linejoin: round;
+    }
+    .venn-label {
+      font-size: 13px;
+      font-weight: 700;
+      transition: x .72s cubic-bezier(.2,.9,.2,1), y .72s cubic-bezier(.2,.9,.2,1);
+    }
+    .venn-count {
+      font-size: 18px;
+      font-weight: 900;
+      transition: x .72s cubic-bezier(.2,.9,.2,1), y .72s cubic-bezier(.2,.9,.2,1), font-size .3s ease;
+    }
+    .intersection-viz.settled .venn-count { font-size: 21px; }
+    .intersection-viz.running .set-a { animation: floatA 1.8s ease-in-out infinite; transform-origin: center; }
+    .intersection-viz.running .set-b { animation: floatB 1.8s ease-in-out infinite; transform-origin: center; }
+    .intersection-viz.running .set-c { animation: floatC 1.8s ease-in-out infinite; transform-origin: center; }
+    .intersection-viz.running .set-d { animation: floatD 1.8s ease-in-out infinite; transform-origin: center; }
+    @keyframes floatA { 0%,100% { transform: translate(0px, 0px); } 50% { transform: translate(0px, -2px); } }
+    @keyframes floatB { 0%,100% { transform: translate(0px, 0px); } 50% { transform: translate(-2px, 1px); } }
+    @keyframes floatC { 0%,100% { transform: translate(0px, 0px); } 50% { transform: translate(0px, 2px); } }
+    @keyframes floatD { 0%,100% { transform: translate(0px, 0px); } 50% { transform: translate(2px, 1px); } }
+    .footer-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    #timer { flex: 0 0 auto; white-space: nowrap; }
+    .feedback-form {
+      flex: 1;
+      display: flex;
+      gap: 4px;
+      min-width: 0;
+    }
+    .feedback-box {
+      flex: 1;
+      min-width: 0;
+    }
+    .feedback-form input {
+      height: 28px;
+      padding: 5px 8px;
+      font-size: 12px;
+      border-width: 1px;
+      border-radius: 12px 10px 13px 10px;
+    }
+    .feedback-form button {
+      width: auto;
+      min-width: 44px;
+      height: 28px;
+      padding: 4px 8px;
+      margin: 0;
+      font-size: 12px;
+      border-width: 1px;
+      border-radius: 12px 10px 13px 10px;
+      box-shadow: 2px 2px 0 rgba(63, 49, 43, .17);
+    }
+    .feedback-status {
+      min-height: 17px;
+      margin-top: 4px;
+      padding-left: 2px;
+      text-align: left;
     }
   </style>
 </head>
@@ -44,8 +248,11 @@
   <h3 data-i18n="appName">Shopee Same-Store Finder</h3>
 
   <div class="section">
-    <label class="muted" data-i18n="labelKeywords">Enter keywords (Space separated)</label>
-    <input id="keywordsInput" data-i18n-placeholder="keywordsPlaceholder" placeholder="mask filter" />
+    <label class="muted" data-i18n="labelKeywords">Enter keywords (Space or comma separated)</label>
+    <div class="keyword-row">
+      <input id="keywordsInput" data-i18n-placeholder="keywordsPlaceholder" placeholder="mask filter" autocomplete="off" />
+      <button id="btnStop" type="button" data-i18n-title="btnStopTitle" title="Stop search" aria-label="Stop search">■</button>
+    </div>
     <div class="section">
       <label class="muted" data-i18n="labelStrength">Search Intensity</label>
       <div class="range-row">
@@ -53,17 +260,44 @@
         <div id="searchStrengthValue" class="range-value">6</div>
       </div>
       <div class="muted" data-i18n="strengthNote">Higher intensity means more pages and longer time.</div>
-      <div class="muted" data-i18n="strengthWarn">High intensity may trigger Shopee verification (Captcha/403).</div>
+      <div class="muted" data-i18n="strengthWarn">High intensity may trigger Shopee verification.</div>
     </div>
     <button id="btnStart" data-i18n="btnStart">Start Analysis</button>
-    <button id="btnClear" data-i18n="btnClear">Clear History</button>
-    <div class="muted" data-i18n="runningNote">You can close this popup while running. Results will appear here.</div>
+    <div class="muted" data-i18n="runningNote">You can leave this popup while running. Results will appear here.</div>
+    <div id="percentBox" class="percent-box" aria-label="progress">
+      <div class="percent-head">
+        <span data-i18n="progressPercentLabel">Overall progress</span>
+        <span id="percentText" class="percent-num">0%</span>
+      </div>
+      <div class="percent-track"><div id="percentFill" class="percent-fill"></div></div>
+    </div>
     <div id="status" class="muted"></div>
   </div>
 
   <div class="section">
     <h4 data-i18n="sectionProgress">Progress</h4>
     <div id="progress" class="progress" data-i18n="progressIdle">(Wait for start)</div>
+    <div id="intersectionViz" class="intersection-viz" aria-hidden="true">
+      <svg id="vennSvg" viewBox="0 0 320 160" preserveAspectRatio="xMidYMid meet">
+        <g id="setA" class="venn-set set-a">
+          <circle id="circleA" class="venn-circle" cx="0" cy="0" r="0"></circle>
+          <text id="labelA" class="venn-label" x="0" y="0">A</text>
+        </g>
+        <g id="setB" class="venn-set set-b">
+          <circle id="circleB" class="venn-circle" cx="0" cy="0" r="0"></circle>
+          <text id="labelB" class="venn-label" x="0" y="0">B</text>
+        </g>
+        <g id="setC" class="venn-set set-c">
+          <circle id="circleC" class="venn-circle" cx="0" cy="0" r="0"></circle>
+          <text id="labelC" class="venn-label" x="0" y="0">C</text>
+        </g>
+        <g id="setD" class="venn-set set-d">
+          <circle id="circleD" class="venn-circle" cx="0" cy="0" r="0"></circle>
+          <text id="labelD" class="venn-label" x="0" y="0">D</text>
+        </g>
+        <text id="vennCount" class="venn-count" x="160" y="80">0</text>
+      </svg>
+    </div>
   </div>
 
   <div class="section">
@@ -73,7 +307,16 @@
       <a id="openAll" class="muted" href="#" data-i18n="openAll">Open All</a>
       <ol id="resultList" class="result-list"></ol>
     </div>
-    <div id="timer" class="muted" data-i18n="timerZero">Time: 0s</div>
+    <div class="footer-row">
+      <div id="timer" class="muted" data-i18n="timerZero">Time: 0s</div>
+      <div class="feedback-box">
+        <form id="feedbackForm" class="feedback-form">
+          <input id="feedbackInput" data-i18n-placeholder="feedbackPlaceholder" placeholder="Feedback" maxlength="240" />
+          <button id="feedbackSend" type="submit" data-i18n="feedbackSend">Send</button>
+        </form>
+        <div id="feedbackStatus" class="muted feedback-status" aria-live="polite"></div>
+      </div>
+    </div>
   </div>
 
   <script src="popup.js"></script>

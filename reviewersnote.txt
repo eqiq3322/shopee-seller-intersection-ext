@@ -1,7 +1,12 @@
 Review Notes:
-- Runs only on Shopee domains (tw, sg, my, ph, th, vn, id, br) as listed in host_permissions.
-- tabs: used to detect the active Shopee tab, navigate Shopee search pages, and open result tabs only after user action.
-- activeTab: used to start analysis from the tab the user is currently viewing.
-- scripting: used to read Shopee page content (search results DOM) to organize same-store results.
-- storage: used to save user settings and temporary results locally.
-- All processing is local; no data is sent to any server.
+- Runs only on supported Shopee regions (tw, sg, th, my, ph, vn, id, br).
+- activeTab: used after user interaction to access the currently active Shopee tab and start analysis.
+- storage: used to save keywords, progress state, and results locally in the browser.
+- Content script is injected only on Shopee search pages listed in content_scripts.matches.
+- host_permissions: required for Shopee domains so popup can call shop detail endpoint to map SHOP_ID values to readable shop names.
+- host_permissions for https://script.google.com/* and https://script.googleusercontent.com/* are used only by the optional feedback form.
+- Feedback submission sends only the feedback text plus limited support metadata: extension version, UI language, Shopee domain, and page type (search / shop / product / other). It does not send the full page URL.
+- chrome.tabs APIs (query/update/create/sendMessage) are used for tab navigation and messaging, without requesting the "tabs" permission.
+- No remote code execution and no external script loading.
+- Core analysis runs locally in the browser. The only external transmission is the optional user-initiated feedback submission to the developer's Google Apps Script endpoint.
+- This is an independent tool and is not affiliated with Shopee.

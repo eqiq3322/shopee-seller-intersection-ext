@@ -1,35 +1,186 @@
 {
-  "appName": { "message": "Shopee Same-Store Finder" },
-  "appDesc": { "message": "Find stores that sell multiple items at once to save on shipping." },
-  "labelKeywords": { "message": "Enter keywords (Comma separated)" },
-  "keywordsPlaceholder": { "message": "mask filter" },
-  "labelStrength": { "message": "Search Intensity" },
-  "strengthNote": { "message": "Higher intensity means more pages and longer time." },
-  "strengthWarn": { "message": "High intensity may trigger Shopee verification (Captcha/403)." },
-  "btnStart": { "message": "Start Analysis" },
-  "btnClear": { "message": "Clear History" },
-  "runningNote": { "message": "You can leave this popup while running. Results will appear here." },
-  "sectionProgress": { "message": "Progress" },
-  "progressIdle": { "message": "(Wait for start)" },
-  "sectionResults": { "message": "Results" },
-  "resultCountZero": { "message": "Matches: 0" },
-  "resultCount": { "message": "Matches: $1", "placeholders": { "1": { "content": "$1" } } },
-  "openAll": { "message": "Open All" },
-  "timerZero": { "message": "Time: 0s" },
-  "timerRunning": { "message": "Time: running…" },
-  "timerElapsed": { "message": "Time: $1s", "placeholders": { "1": { "content": "$1" } } },
-  "statusNeedKeywords": { "message": "Please enter keywords (Space separated)" },
-  "statusNoTab": { "message": "Cannot get active tab" },
-  "statusNotShopee": { "message": "Please use on a Shopee tab" },
-  "statusStarted": { "message": "Analysis started (you can close this popup)" },
-  "statusCleared": { "message": "Cleared previous results" },
-  "statusEncodingIssue": { "message": "Encoding issue detected, cleared results. Please retry." },
-  "progressItem": { "message": "$1: $2 stores", "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" } } },
-  "progressItemEmpty": { "message": "$1: Not yet", "placeholders": { "1": { "content": "$1" } } },
-  "statusAnalysisStopped": { "message": "Analysis stopped: tab closed" },
-  "statusAnalyzing": { "message": "Analyzing: $1 ($2/$3)", "placeholders": { "1": { "content": "$1" }, "2": { "content": "$2" }, "3": { "content": "$3" } } },
-  "statusDone": { "message": "Done: $1", "placeholders": { "1": { "content": "$1" } } },
-  "statusFailed": { "message": "Failed: $1 (no stores)", "placeholders": { "1": { "content": "$1" } } },
-  "statusStarting": { "message": "Starting analysis…" },
-  "statusComplete": { "message": "Analysis complete" }
+  "appName": {
+    "message": "Shopee Same-Store Finder"
+  },
+  "appDesc": {
+    "message": "Find stores that sell multiple items at once to save on shipping."
+  },
+  "labelKeywords": {
+    "message": "Enter keywords (space or comma separated)"
+  },
+  "keywordsPlaceholder": {
+    "message": "mask filter"
+  },
+  "labelStrength": {
+    "message": "Search Intensity"
+  },
+  "strengthNote": {
+    "message": "Higher intensity scans more pages and takes more time."
+  },
+  "strengthWarn": {
+    "message": "High intensity may trigger Shopee verification."
+  },
+  "btnStart": {
+    "message": "Start Analysis"
+  },
+  "btnClear": {
+    "message": "Clear History"
+  },
+  "runningNote": {
+    "message": "You can close this popup while the analysis runs. Results will appear here."
+  },
+  "sectionProgress": {
+    "message": "Progress"
+  },
+  "progressIdle": {
+    "message": "(Waiting to start)"
+  },
+  "sectionResults": {
+    "message": "Results"
+  },
+  "resultCountZero": {
+    "message": "Matches: 0"
+  },
+  "resultCount": {
+    "message": "Matches: $1",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "openAll": {
+    "message": "Open All"
+  },
+  "timerZero": {
+    "message": "Time: 0s"
+  },
+  "timerRunning": {
+    "message": "Time: running..."
+  },
+  "timerElapsed": {
+    "message": "Time: $1s",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "statusNeedKeywords": {
+    "message": "Please enter keywords (space or comma separated)"
+  },
+  "statusNoTab": {
+    "message": "Cannot get the active tab"
+  },
+  "statusNotShopee": {
+    "message": "Please use this extension on a Shopee tab"
+  },
+  "statusStarted": {
+    "message": "Analysis started (you can close this popup)"
+  },
+  "statusCleared": {
+    "message": "Previous results cleared"
+  },
+  "statusEncodingIssue": {
+    "message": "An encoding issue was detected. Results were cleared. Please try again."
+  },
+  "progressItem": {
+    "message": "$1: $2 stores",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      },
+      "2": {
+        "content": "$2"
+      }
+    }
+  },
+  "progressItemEmpty": {
+    "message": "$1: Not yet",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "statusAnalysisStopped": {
+    "message": "Analysis stopped: tab closed"
+  },
+  "statusAnalyzing": {
+    "message": "Analyzing: $1 ($2/$3)",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      },
+      "2": {
+        "content": "$2"
+      },
+      "3": {
+        "content": "$3"
+      }
+    }
+  },
+  "statusDone": {
+    "message": "Done: $1",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "statusFailed": {
+    "message": "Failed: $1 (no stores)",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "statusStarting": {
+    "message": "Starting analysis..."
+  },
+  "statusComplete": {
+    "message": "Analysis complete"
+  },
+  "progressPercentLabel": {
+    "message": "Overall progress"
+  },
+  "feedbackPlaceholder": {
+    "message": "Feedback"
+  },
+  "feedbackSend": {
+    "message": "Send"
+  },
+  "feedbackSending": {
+    "message": "Sending"
+  },
+  "feedbackEmpty": {
+    "message": "Please type feedback first"
+  },
+  "feedbackSent": {
+    "message": "Feedback sent. Thank you!"
+  },
+  "feedbackMailto": {
+    "message": "Email draft opened"
+  },
+  "feedbackFailed": {
+    "message": "Could not send feedback"
+  },
+  "vizIntersection": {
+    "message": "$1",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "vizWaiting": {
+    "message": "Waiting"
+  },
+  "btnStopTitle": {
+    "message": "Stop search"
+  },
+  "statusStoppedByUser": {
+    "message": "Search stopped"
+  }
 }

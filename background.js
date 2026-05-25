@@ -1,4 +1,4 @@
-﻿const STORAGE_LISTS = "lists";
+const STORAGE_LISTS = "lists";
 const STORAGE_EXPECTED = "expectedKeywords";
 const STORAGE_LAST_ORIGIN = "lastOrigin";
 const STORAGE_STATUS = "statusText";
@@ -7,6 +7,7 @@ const STORAGE_RUNNING = "running";
 const STORAGE_START = "startTimeMs";
 const STORAGE_END = "endTimeMs";
 const STORAGE_OPEN_ALL = "openAllInProgress";
+const STORAGE_PROGRESS_META = "progressMeta";
 
 // Speed + coverage tuning
 const DEFAULT_PAGES_TO_SCAN = 6;   // default pages per keyword (slider min 2 max 20)
@@ -43,6 +44,12 @@ function setStatus(text, tone) {
   return chrome.storage.local.set({
     [STORAGE_STATUS]: text || "",
     [STORAGE_STATUS_TONE]: tone || "muted"
+  });
+}
+
+function setProgressMeta(meta) {
+  return chrome.storage.local.set({
+    [STORAGE_PROGRESS_META]: meta || { percent: 0 }
   });
 }
 
@@ -97,13 +104,26 @@ async function autoCollectInTabs(expected, origin, runId, pagesToScan, tabId) {
   const lists = await getLists();
   const queue = expected.slice();
   const pageCount = normalizePagesToScan(pagesToScan);
+  const totalPages = Math.max(1, queue.length * pageCount);
 
-  for (const keyword of queue) {
+  for (let keywordIndex = 0; keywordIndex < queue.length; keywordIndex++) {
+    const keyword = queue[keywordIndex];
     if (runId !== currentRunId) break;
     if (!tabId) break;
 
     const sellersSet = new Set();
     const url = `${origin}/search?keyword=${encodeURIComponent(keyword)}&page=0`;
+    await setProgressMeta({
+      percent: Math.round(((keywordIndex * pageCount) / totalPages) * 100),
+      currentKeyword: keyword,
+      currentPage: 0,
+      pageCount,
+      donePages: keywordIndex * pageCount,
+      totalPages,
+      doneKeywords: keywordIndex,
+      totalKeywords: queue.length
+    });
+
     try {
       await chrome.tabs.update(tabId, { url });
     } catch {
@@ -115,7 +135,19 @@ async function autoCollectInTabs(expected, origin, runId, pagesToScan, tabId) {
     for (let page = 0; page < pageCount; page++) {
       if (runId !== currentRunId) break;
 
+      const doneBefore = keywordIndex * pageCount + page;
+      await setProgressMeta({
+        percent: Math.round((doneBefore / totalPages) * 100),
+        currentKeyword: keyword,
+        currentPage: page + 1,
+        pageCount,
+        donePages: doneBefore,
+        totalPages,
+        doneKeywords: keywordIndex,
+        totalKeywords: queue.length
+      });
       await setStatus(t("statusAnalyzing", [keyword, String(page + 1), String(pageCount)]), "ok");
+
       if (page > 0) {
         const pageUrl = `${origin}/search?keyword=${encodeURIComponent(keyword)}&page=${page}`;
         try {
@@ -133,6 +165,18 @@ async function autoCollectInTabs(expected, origin, runId, pagesToScan, tabId) {
         minCount: POLL_MIN_COUNT
       });
       for (const s of sellers) sellersSet.add(s);
+
+      const doneAfter = keywordIndex * pageCount + page + 1;
+      await setProgressMeta({
+        percent: Math.round((doneAfter / totalPages) * 100),
+        currentKeyword: keyword,
+        currentPage: page + 1,
+        pageCount,
+        donePages: doneAfter,
+        totalPages,
+        doneKeywords: keywordIndex,
+        totalKeywords: queue.length
+      });
       await delay(250);
     }
 
@@ -150,6 +194,17 @@ async function autoCollectInTabs(expected, origin, runId, pagesToScan, tabId) {
     } else {
       await setStatus(t("statusFailed", [keyword]), "warn");
     }
+
+    await setProgressMeta({
+      percent: Math.round((((keywordIndex + 1) * pageCount) / totalPages) * 100),
+      currentKeyword: keyword,
+      currentPage: pageCount,
+      pageCount,
+      donePages: (keywordIndex + 1) * pageCount,
+      totalPages,
+      doneKeywords: keywordIndex + 1,
+      totalKeywords: queue.length
+    });
   }
 }
 
@@ -157,12 +212,25 @@ async function startCollect(expected, origin, pagesToScan, tabId) {
   currentRunId += 1;
   const runId = currentRunId;
 
+  const pageCount = normalizePagesToScan(pagesToScan);
+  const totalPages = Math.max(1, expected.length * pageCount);
+
   await chrome.storage.local.set({
     [STORAGE_EXPECTED]: expected,
     [STORAGE_LAST_ORIGIN]: origin,
     [STORAGE_RUNNING]: true,
     [STORAGE_START]: Date.now(),
-    [STORAGE_END]: 0
+    [STORAGE_END]: 0,
+    [STORAGE_PROGRESS_META]: {
+      percent: 0,
+      currentKeyword: "",
+      currentPage: 0,
+      pageCount,
+      donePages: 0,
+      totalPages,
+      doneKeywords: 0,
+      totalKeywords: expected.length
+    }
   });
   await saveLists({});
   await setStatus(t("statusStarting"), "ok");
@@ -172,7 +240,17 @@ async function startCollect(expected, origin, pagesToScan, tabId) {
   if (runId === currentRunId) {
     await chrome.storage.local.set({
       [STORAGE_RUNNING]: false,
-      [STORAGE_END]: Date.now()
+      [STORAGE_END]: Date.now(),
+      [STORAGE_PROGRESS_META]: {
+        percent: 100,
+        currentKeyword: "",
+        currentPage: pageCount,
+        pageCount,
+        donePages: totalPages,
+        totalPages,
+        doneKeywords: expected.length,
+        totalKeywords: expected.length
+      }
     });
     await setStatus(t("statusComplete"), "ok");
   }

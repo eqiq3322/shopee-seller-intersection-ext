@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "default_locale": "en",
   "name": "__MSG_appName__",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "__MSG_appDesc__",
   "action": {
     "default_title": "__MSG_appName__",
@@ -16,11 +16,31 @@
   "background": {
     "service_worker": "background.js"
   },
-  "permissions": ["storage", "activeTab", "scripting", "tabs"],
-  "host_permissions": ["*://*.shopee.tw/*", "*://*.shopee.sg/*", "*://*.shopee.co.th/*", "*://*.shopee.com.my/*", "*://*.shopee.ph/*", "*://*.shopee.vn/*", "*://*.shopee.co.id/*", "*://*.shopee.com.br/*"],
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": [
+    "https://script.google.com/*",
+    "https://script.googleusercontent.com/*",
+    "*://*.shopee.tw/*",
+    "*://*.shopee.sg/*",
+    "*://*.shopee.co.th/*",
+    "*://*.shopee.com.my/*",
+    "*://*.shopee.ph/*",
+    "*://*.shopee.vn/*",
+    "*://*.shopee.co.id/*",
+    "*://*.shopee.com.br/*"
+  ],
   "content_scripts": [
     {
-      "matches": ["*://*.shopee.tw/*", "*://*.shopee.sg/*", "*://*.shopee.co.th/*", "*://*.shopee.com.my/*", "*://*.shopee.ph/*", "*://*.shopee.vn/*", "*://*.shopee.co.id/*", "*://*.shopee.com.br/*"],
+      "matches": [
+        "*://*.shopee.tw/search*",
+        "*://*.shopee.sg/search*",
+        "*://*.shopee.co.th/search*",
+        "*://*.shopee.com.my/search*",
+        "*://*.shopee.ph/search*",
+        "*://*.shopee.vn/search*",
+        "*://*.shopee.co.id/search*",
+        "*://*.shopee.com.br/search*"
+      ],
       "js": ["content.js"],
       "run_at": "document_idle"
     }
